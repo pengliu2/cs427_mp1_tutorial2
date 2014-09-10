@@ -1,5 +1,6 @@
 package edu.ncsu.csc326.coffeemaker;
 
+import edu.ncsu.csc326.coffeemaker.db.InventoryDB;
 import edu.ncsu.csc326.coffeemaker.exceptions.InventoryException;
 
 /**
@@ -8,11 +9,6 @@ import edu.ncsu.csc326.coffeemaker.exceptions.InventoryException;
  * Inventory for the coffee maker
  */
 public class Inventory {
-    
-    private static int coffee;
-    private static int milk;
-    private static int sugar;
-    private static int chocolate;
     
     /**
      * Creates a coffee maker inventory object and
@@ -25,12 +21,23 @@ public class Inventory {
     	setChocolate(15);
     }
     
+    private void storeInventory(String name, int amt) {
+    	int curr = 0;
+    	curr = InventoryDB.checkInventory(name);
+    	if(amt >= 0) {
+    		amt -= curr;
+    		InventoryDB.addInventory(name, amt);
+    	}
+    }
+
     /**
      * Returns the current number of chocolate units in 
      * the inventory.
      * @return int
      */
     public int getChocolate() {
+    	int chocolate = -1;
+    	chocolate = InventoryDB.checkInventory("chocolate");
         return chocolate;
     }
     
@@ -40,10 +47,7 @@ public class Inventory {
      * @param chocolate
      */
     public synchronized void setChocolate(int chocolate) {
-    	if(chocolate >= 0) {
-    		Inventory.chocolate = chocolate;
-    	}
-        
+    	storeInventory("chocolate", chocolate);
     }
     
     /**
@@ -60,7 +64,7 @@ public class Inventory {
     		throw new InventoryException("Units of chocolate must be a positive integer");
     	}
 		if (amtChocolate >= 0) {
-			Inventory.chocolate += amtChocolate;
+			InventoryDB.addInventory("chocolate", amtChocolate);
 		} else {
 			throw new InventoryException("Units of chocolate must be a positive integer");
 		}
@@ -72,7 +76,7 @@ public class Inventory {
      * @return int
      */
     public int getCoffee() {
-        return coffee;
+        return InventoryDB.checkInventory("coffee");
     }
     
     /**
@@ -81,9 +85,7 @@ public class Inventory {
      * @param coffee
      */
     public synchronized void setCoffee(int coffee) {
-    	if(coffee >= 0) {
-    		Inventory.coffee = coffee;
-    	}
+    	storeInventory("coffee", coffee);
     }
     
     /**
@@ -100,7 +102,7 @@ public class Inventory {
     		throw new InventoryException("Units of coffee must be a positive integer");
     	}
 		if (amtCoffee >= 0) {
-			Inventory.coffee += amtCoffee;
+			InventoryDB.addInventory("coffee", amtCoffee);
 		} else {
 			throw new InventoryException("Units of coffee must be a positive integer");
 		}
@@ -112,7 +114,9 @@ public class Inventory {
      * @return int
      */
     public int getMilk() {
-        return milk;
+    	int amt = -1;
+    	amt = InventoryDB.checkInventory("milk");
+        return amt;
     }
     
     /**
@@ -121,9 +125,7 @@ public class Inventory {
      * @param milk
      */
     public synchronized void setMilk(int milk) {
-    	if(milk >= 0) {
-    		Inventory.milk = milk;
-    	}
+    	storeInventory("milk", milk);
     }
     
     /**
@@ -140,7 +142,7 @@ public class Inventory {
     		throw new InventoryException("Units of milk must be a positive integer");
     	}
 		if (amtMilk >= 0) {
-			Inventory.milk += amtMilk;
+			InventoryDB.addInventory("milk", amtMilk);
 		} else {
 			throw new InventoryException("Units of milk must be a positive integer");
 		}
@@ -152,7 +154,7 @@ public class Inventory {
      * @return int
      */
     public int getSugar() {
-        return sugar;
+    	return InventoryDB.checkInventory("sugar");
     }
     
     /**
@@ -161,9 +163,7 @@ public class Inventory {
      * @param sugar
      */
     public synchronized void setSugar(int sugar) {
-    	if(sugar >= 0) {
-    		Inventory.sugar = sugar;
-    	}
+    	storeInventory("sugar", sugar);
     }
     
     /**
@@ -180,7 +180,7 @@ public class Inventory {
     		throw new InventoryException("Units of sugar must be a positive integer");
     	}
 		if (amtSugar >= 0) { 
-			Inventory.sugar += amtSugar;
+			InventoryDB.addInventory("sugar", amtSugar);
 		} else {
 			throw new InventoryException("Units of sugar must be a positive integer");
 		}
@@ -194,18 +194,20 @@ public class Inventory {
      */
     protected synchronized boolean enoughIngredients(Recipe r) {
         boolean isEnough = true;
-        if(Inventory.coffee < r.getAmtCoffee()) {
-            isEnough = false;
-        }
-        if(Inventory.milk < r.getAmtMilk()) {
-            isEnough = false;
-        }
-        if(Inventory.sugar < r.getAmtSugar()) {
-            isEnough = false;
-        }
-        if(Inventory.chocolate < r.getAmtChocolate()) {
-            isEnough = false;
-        }
+		do {
+			if (InventoryDB.checkInventory("coffee") < r.getAmtCoffee()) {
+				isEnough = false;
+			}
+			if (InventoryDB.checkInventory("milk") < r.getAmtMilk()) {
+				isEnough = false;
+			}
+			if (InventoryDB.checkInventory("sugar") < r.getAmtSugar()) {
+				isEnough = false;
+			}
+			if (InventoryDB.checkInventory("chocolate") < r.getAmtChocolate()) {
+				isEnough = false;
+			}
+		} while (false);
         return isEnough;
     }
     
@@ -217,10 +219,10 @@ public class Inventory {
      */
     public synchronized boolean useIngredients(Recipe r) {
     	if (enoughIngredients(r)) {
-	    	Inventory.coffee -= r.getAmtCoffee();
-	    	Inventory.milk -= r.getAmtMilk();
-	    	Inventory.sugar -= r.getAmtSugar();
-	    	Inventory.chocolate -= r.getAmtChocolate();
+	    	InventoryDB.useInventory("coffee", r.getAmtCoffee());
+	    	InventoryDB.useInventory("milk", r.getAmtMilk());
+	    	InventoryDB.useInventory("sugar", r.getAmtSugar());
+	    	InventoryDB.useInventory("chocolate" ,r.getAmtChocolate());
 	    	return true;
     	} else {
     		return false;
@@ -247,5 +249,17 @@ public class Inventory {
     	buf.append(getChocolate());
     	buf.append("\n");
     	return buf.toString();
+    }
+    
+    public void setInventory(String name, int amt) {
+    	if ("coffee".equals(name)) {
+    		setCoffee(amt);
+    	} else if ("milk".equals(name)) {
+    		setMilk(amt);
+    	} else if ("sugar".equals(name)) {
+    		setSugar(amt);
+    	} else if ("chocolate".equals(name)) {
+    		setChocolate(amt);
+    	}
     }
 }

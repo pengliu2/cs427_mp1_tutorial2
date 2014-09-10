@@ -41,10 +41,9 @@ public class CreateDBTables {
 		try {
 			conn = db.getConnection();
 			stmt = conn.prepareStatement("CREATE TABLE inventory (" +
-					"coffee int NOT NULL, " +
-					"milk int NOT NULL, " +
-					"sugar int NOT NULL, " +
-					"chocolate int NOT NULL)");
+					"name varchar(25) NOT NULL, " +
+					"amt int NOT NULL)"
+					);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -71,5 +70,4 @@ public class CreateDBTables {
 			DBConnection.closeConnection(conn, stmt);
 		}
 	}
-
 }
